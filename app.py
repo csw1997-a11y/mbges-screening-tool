@@ -181,7 +181,7 @@ suitability_colours = {
     "Unsuitable": "#d73027"
 }
 
-map_figure = px.scatter_mapbox(
+map_figure = px.scatter_map(
     filtered_df,
     lat="Latitude",
     lon="Longitude",
@@ -203,6 +203,7 @@ map_figure = px.scatter_mapbox(
         "Longitude": ":.4f",
         "Suitability_Class": False
     },
+    map_style="open-street-map",
     center={
         "lat": -25.5,
         "lon": 134.0
@@ -210,7 +211,6 @@ map_figure = px.scatter_mapbox(
     zoom=3,
     height=650
 )
-
 map_figure.update_traces(
     marker={
         "size": 6,
@@ -219,14 +219,8 @@ map_figure.update_traces(
 )
 
 map_figure.update_layout(
-    mapbox_style="open-street-map",
-    margin={
-        "r": 0,
-        "t": 0,
-        "l": 0,
-        "b": 0
-    },
-    legend_title_text="Suitability Class"
+    margin={"r": 0, "t": 40, "l": 0, "b": 0},
+    legend_title_text="Suitability"
 )
 
 st.plotly_chart(
