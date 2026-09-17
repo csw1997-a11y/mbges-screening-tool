@@ -158,7 +158,7 @@ st.markdown(
 # CHANGE THIS FILE NAME IF NECESSARY
 # ------------------------------------------------------------
 
-DATA_FILE = "mine_screening_data.csv"
+DATA_FILE = "mbges_mine_data.csv"
 
 
 # ============================================================
