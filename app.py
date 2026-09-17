@@ -1133,84 +1133,187 @@ else:
     # PROXIMITY ANALYSIS
     # ============================================================
 
-    if selected_row_id is not None:
+  # ================================================================
+# PROXIMITY ANALYSIS
+# ================================================================
 
-        selected_rows = filtered_df[
-            filtered_df["_APP_ROW_ID"] == selected_row_id
-        ]
+selected_proximity_id = st.session_state.get("selected_mine_row")
 
-        if not selected_rows.empty:
+if selected_proximity_id is not None:
 
-            mine = selected_rows.iloc[0]
+    selected_rows_proximity = filtered_df[
+        filtered_df["_APP_ROW_ID"] == selected_proximity_id
+    ]
 
-            proximity_data = []
+    if not selected_rows_proximity.empty:
 
-            for label, column in PROXIMITY_COLUMNS.items():
+        selected_mine = selected_rows_proximity.iloc[0]
 
-                value = pd.to_numeric(
-                    pd.Series([mine[column]]),
-                    errors="coerce"
-                ).iloc[0]
+        proximity_data = []
 
-                if pd.notna(value):
+        for label, column in PROXIMITY_COLUMNS.items():
 
-                    proximity_data.append(
-                        {
-                            "Criterion": label,
-                            "Distance_km": float(value)
-                        }
-                    )
+            if column not in selected_mine.index:
+                continue
 
-            if proximity_data:
+            value = pd.to_numeric(
+                pd.Series([selected_mine[column]]),
+                errors="coerce"
+            ).iloc[0]
 
-                st.divider()
+            if pd.notna(value):
 
-                st.subheader(
-                    "Proximity Analysis"
-                )
-
-                st.caption(
-                    "Distance of the selected mine from key infrastructure "
-                    "and potential end-user facilities. Lower values indicate "
-                    "closer proximity."
-                )
-
-                proximity_df = pd.DataFrame(
-                    proximity_data
-                ).sort_values(
-                    "Distance_km",
-                    ascending=True
-                )
-
-                fig_proximity = px.bar(
-                    proximity_df,
-                    x="Distance_km",
-                    y="Criterion",
-                    orientation="h",
-                    text_auto=".1f",
-                    labels={
-                        "Distance_km": "Distance (km)",
-                        "Criterion": ""
+                proximity_data.append(
+                    {
+                        "Criterion": label,
+                        "Distance": float(value)
                     }
                 )
 
-                fig_proximity.update_layout(
-                    height=450,
+        # --------------------------------------------------------
+        # GRAPH 1 - SELECTED MINE PROXIMITY PROFILE
+        # --------------------------------------------------------
+
+        if proximity_data:
+
+            st.divider()
+
+            st.subheader("Proximity Analysis")
+
+            st.caption(
+                "Distance from the selected mine to key geological, "
+                "infrastructure and end-user features. "
+                "Lower values indicate closer proximity."
+            )
+
+            proximity_df = pd.DataFrame(proximity_data)
+
+            proximity_df = proximity_df.sort_values(
+                "Distance",
+                ascending=True
+            )
+
+            fig_proximity = px.bar(
+                proximity_df,
+                x="Distance",
+                y="Criterion",
+                orientation="h",
+                text_auto=".1f",
+                labels={
+                    "Distance": "Distance (km)",
+                    "Criterion": ""
+                }
+            )
+
+            fig_proximity.update_layout(
+                height=520,
+                margin=dict(
+                    l=20,
+                    r=20,
+                    t=20,
+                    b=20
+                ),
+                showlegend=False
+            )
+
+            fig_proximity.update_yaxes(
+                categoryorder="total descending"
+            )
+
+            st.plotly_chart(
+                fig_proximity,
+                use_container_width=True
+            )
+
+
+            # ----------------------------------------------------
+            # GRAPH 2 - SELECTED MINE VS FILTERED MINE MEDIAN
+            # ----------------------------------------------------
+
+            comparison_data = []
+
+            for label, column in PROXIMITY_COLUMNS.items():
+
+                if column not in filtered_df.columns:
+                    continue
+
+                selected_value = pd.to_numeric(
+                    pd.Series([selected_mine[column]]),
+                    errors="coerce"
+                ).iloc[0]
+
+                all_values = pd.to_numeric(
+                    filtered_df[column],
+                    errors="coerce"
+                )
+
+                median_value = all_values.median()
+
+                if (
+                    pd.notna(selected_value)
+                    and pd.notna(median_value)
+                ):
+
+                    comparison_data.append(
+                        {
+                            "Criterion": label,
+                            "Selected Mine": float(selected_value),
+                            "Filtered Mine Median": float(median_value)
+                        }
+                    )
+
+
+            if comparison_data:
+
+                comparison_df = pd.DataFrame(
+                    comparison_data
+                )
+
+                comparison_long = comparison_df.melt(
+                    id_vars="Criterion",
+                    value_vars=[
+                        "Selected Mine",
+                        "Filtered Mine Median"
+                    ],
+                    var_name="Mine Group",
+                    value_name="Distance"
+                )
+
+                st.markdown(
+                    "#### Selected Mine Compared with Current Mine Selection"
+                )
+
+                st.caption(
+                    "Comparison between the selected mine and the median "
+                    "distance of all mines currently included by the filters."
+                )
+
+                fig_compare = px.bar(
+                    comparison_long,
+                    x="Distance",
+                    y="Criterion",
+                    color="Mine Group",
+                    barmode="group",
+                    orientation="h",
+                    labels={
+                        "Distance": "Distance (km)",
+                        "Criterion": "",
+                        "Mine Group": ""
+                    }
+                )
+
+                fig_compare.update_layout(
+                    height=560,
                     margin=dict(
                         l=20,
                         r=20,
                         t=20,
                         b=20
-                    ),
-                    showlegend=False
-                )
-
-                fig_proximity.update_yaxes(
-                    categoryorder="total ascending"
+                    )
                 )
 
                 st.plotly_chart(
-                    fig_proximity,
+                    fig_compare,
                     use_container_width=True
                 )
 
