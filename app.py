@@ -358,6 +358,11 @@ PROXIMITY_COLUMNS = {
     "Built-up Areas": "C14_Built_Up",
 }
 
+PROXIMITY_COLUMNS = {
+    label: column
+    for label, column in PROXIMITY_COLUMNS.items()
+    if column in df.columns
+}
 # Keep only columns that actually exist in the dataset
 PROXIMITY_COLUMNS = {
     label: column
