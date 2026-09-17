@@ -947,7 +947,6 @@ else:
             "Selected Mine"
         )
 
-
         if selected_row_id is None:
 
             with st.container(
@@ -959,14 +958,11 @@ else:
                     "to view its details."
                 )
 
-
         else:
 
             selected_rows = filtered_df[
-                filtered_df["_APP_ROW_ID"]
-                == selected_row_id
+                filtered_df["_APP_ROW_ID"] == selected_row_id
             ]
-
 
             if selected_rows.empty:
 
@@ -979,11 +975,9 @@ else:
                         "is outside the current filters."
                     )
 
-
             else:
 
                 mine = selected_rows.iloc[0]
-
 
                 # ------------------------------------------------
                 # MAIN MINE INFORMATION
@@ -997,11 +991,9 @@ else:
                         f"### {mine[MINE_NAME]}"
                     )
 
-
                     info_left, info_right = st.columns(
                         2
                     )
-
 
                     with info_left:
 
@@ -1013,7 +1005,6 @@ else:
                             f"**{mine[STATE]}**"
                         )
 
-
                         st.caption(
                             "Mine status"
                         )
@@ -1021,7 +1012,6 @@ else:
                         st.markdown(
                             f"**{mine[STATUS]}**"
                         )
-
 
                     with info_right:
 
@@ -1043,7 +1033,6 @@ else:
                                 f"**{commodity_value}**"
                             )
 
-
                         if SUITABILITY is not None:
 
                             st.caption(
@@ -1062,93 +1051,6 @@ else:
                                 f"**{suitability_value}**"
                             )
 
-# ================================================================
-# PROXIMITY ANALYSIS
-# ================================================================
-
-if selected_row_id is not None:
-
-    selected_rows = filtered_df[
-        filtered_df["_APP_ROW_ID"] == selected_row_id
-    ]
-
-    if not selected_rows.empty:
-
-        mine = selected_rows.iloc[0]
-
-        proximity_data = []
-
-        for label, column in PROXIMITY_COLUMNS.items():
-
-            value = pd.to_numeric(
-                pd.Series([mine[column]]),
-                errors="coerce"
-            ).iloc[0]
-
-            if pd.notna(value):
-
-                proximity_data.append(
-                    {
-                        "Criterion": label,
-                        "Distance_km": float(value)
-                    }
-                )
-
-
-        if proximity_data:
-
-            st.divider()
-
-            st.subheader("Proximity Analysis")
-
-            st.caption(
-                "Distance of the selected mine from key infrastructure "
-                "and potential end-user facilities. Lower values indicate "
-                "closer proximity."
-            )
-
-            proximity_df = pd.DataFrame(proximity_data)
-
-            proximity_df = proximity_df.sort_values(
-                "Distance_km",
-                ascending=True
-            )
-
-
-            fig_proximity = px.bar(
-                proximity_df,
-                x="Distance_km",
-                y="Criterion",
-                orientation="h",
-                text_auto=".1f",
-                labels={
-                    "Distance_km": "Distance (km)",
-                    "Criterion": ""
-                }
-            )
-
-
-            fig_proximity.update_layout(
-                height=450,
-                margin=dict(
-                    l=20,
-                    r=20,
-                    t=20,
-                    b=20
-                ),
-                showlegend=False
-            )
-
-
-            fig_proximity.update_yaxes(
-                categoryorder="total ascending"
-            )
-
-
-            st.plotly_chart(
-                fig_proximity,
-                use_container_width=True
-            )
                 # ------------------------------------------------
                 # TOPSIS + RANK
                 # ------------------------------------------------
@@ -1157,12 +1059,10 @@ if selected_row_id is not None:
                     2
                 )
 
-
                 score_col.metric(
                     "TOPSIS Score",
                     f"{float(mine[TOPSIS]):.4f}",
                 )
-
 
                 if (
                     RANK is not None
@@ -1182,7 +1082,6 @@ if selected_row_id is not None:
                         "Rank",
                         "-",
                     )
-
 
                 # ------------------------------------------------
                 # COORDINATES
@@ -1208,7 +1107,6 @@ if selected_row_id is not None:
                         f"{float(mine[LATITUDE]):.5f}"
                     )
 
-
                     loc2.caption(
                         "Longitude"
                     )
@@ -1216,7 +1114,6 @@ if selected_row_id is not None:
                     loc2.write(
                         f"{float(mine[LONGITUDE]):.5f}"
                     )
-
 
                 # ------------------------------------------------
                 # ADDITIONAL ATTRIBUTES
@@ -1236,42 +1133,34 @@ if selected_row_id is not None:
                         TOPSIS,
                     }
 
-
                     if COMMODITY is not None:
                         excluded_columns.add(
                             COMMODITY
                         )
-
 
                     if SUITABILITY is not None:
                         excluded_columns.add(
                             SUITABILITY
                         )
 
-
                     if RANK is not None:
                         excluded_columns.add(
                             RANK
                         )
 
-
                     attribute_rows = []
-
 
                     for column in df.columns:
 
                         if column in excluded_columns:
                             continue
 
-
                         value = mine.get(
                             column
                         )
 
-
                         if pd.isna(value):
                             continue
-
 
                         if isinstance(
                             value,
@@ -1282,14 +1171,12 @@ if selected_row_id is not None:
                                 f"{value:,.4f}"
                             )
 
-
                         attribute_rows.append(
                             {
                                 "Attribute": column,
                                 "Value": value,
                             }
                         )
-
 
                     if attribute_rows:
 
@@ -1309,6 +1196,90 @@ if selected_row_id is not None:
                             "No additional attributes are available."
                         )
 
+    # ============================================================
+    # PROXIMITY ANALYSIS
+    # ============================================================
+
+    if selected_row_id is not None:
+
+        selected_rows = filtered_df[
+            filtered_df["_APP_ROW_ID"] == selected_row_id
+        ]
+
+        if not selected_rows.empty:
+
+            mine = selected_rows.iloc[0]
+
+            proximity_data = []
+
+            for label, column in PROXIMITY_COLUMNS.items():
+
+                value = pd.to_numeric(
+                    pd.Series([mine[column]]),
+                    errors="coerce"
+                ).iloc[0]
+
+                if pd.notna(value):
+
+                    proximity_data.append(
+                        {
+                            "Criterion": label,
+                            "Distance_km": float(value)
+                        }
+                    )
+
+            if proximity_data:
+
+                st.divider()
+
+                st.subheader(
+                    "Proximity Analysis"
+                )
+
+                st.caption(
+                    "Distance of the selected mine from key infrastructure "
+                    "and potential end-user facilities. Lower values indicate "
+                    "closer proximity."
+                )
+
+                proximity_df = pd.DataFrame(
+                    proximity_data
+                ).sort_values(
+                    "Distance_km",
+                    ascending=True
+                )
+
+                fig_proximity = px.bar(
+                    proximity_df,
+                    x="Distance_km",
+                    y="Criterion",
+                    orientation="h",
+                    text_auto=".1f",
+                    labels={
+                        "Distance_km": "Distance (km)",
+                        "Criterion": ""
+                    }
+                )
+
+                fig_proximity.update_layout(
+                    height=450,
+                    margin=dict(
+                        l=20,
+                        r=20,
+                        t=20,
+                        b=20
+                    ),
+                    showlegend=False
+                )
+
+                fig_proximity.update_yaxes(
+                    categoryorder="total ascending"
+                )
+
+                st.plotly_chart(
+                    fig_proximity,
+                    use_container_width=True
+                )
 
 # ================================================================
 # 14. HIGHEST-RANKED MINES TABLE
@@ -1506,9 +1477,9 @@ C_i
         """
 where:
 
-- **\(S_i^{+}\)** is the distance of mine *i* from the positive ideal solution;
-- **\(S_i^{-}\)** is the distance from the negative ideal solution; and
-- **\(C_i\)** is the final TOPSIS closeness coefficient.
+- **Sᵢ⁺** is the distance of mine *i* from the positive ideal solution;
+- **Sᵢ⁻** is the distance from the negative ideal solution; and
+- **Cᵢ** is the final TOPSIS closeness coefficient.
 
 The score generally ranges between **0 and 1**. A higher value indicates
 greater relative suitability within the evaluated mine dataset.
