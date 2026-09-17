@@ -1,6 +1,6 @@
 # ================================================================
 # MINE-BASED GEOTHERMAL SCREENING TOOL
-# Complete Streamlit Application
+# Complete Streamlit application
 # ================================================================
 
 import os
@@ -24,7 +24,7 @@ st.set_page_config(
 
 
 # ================================================================
-# 2. CUSTOM PAGE STYLE
+# 2. CUSTOM STYLE
 # ================================================================
 
 st.markdown(
@@ -51,10 +51,6 @@ st.markdown(
 
 [data-testid="stMetricLabel"] {
     font-weight: 600;
-}
-
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 15px;
 }
 
 .hero {
@@ -84,11 +80,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-top: -8px;
     margin-bottom: 15px;
 }
-
-.small-note {
-    color: #6b7280;
-    font-size: 0.86rem;
-}
 </style>
 """,
     unsafe_allow_html=True,
@@ -98,65 +89,47 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 # ================================================================
 # 3. DATA FILE
 # ================================================================
-#
-# If you know the exact file name, put it here.
-#
-# Example:
-#
+# If you know the exact data filename, put it here, for example:
 # DATA_FILE = "Sensitivity Analysis - Copy.xlsx"
-#
-# If DATA_FILE = None, the application will automatically search
-# the repository for a CSV or Excel file.
-# ================================================================
+# Otherwise leave it as None and the app will look for CSV/Excel files.
 
 DATA_FILE = None
 
 
 def find_data_file():
-
     if DATA_FILE is not None and os.path.exists(DATA_FILE):
         return DATA_FILE
 
     candidate_files = []
-
     for pattern in ["*.csv", "*.xlsx", "*.xls"]:
         candidate_files.extend(glob.glob(pattern))
 
-    # Ignore temporary Excel files
     candidate_files = [
         f for f in candidate_files
         if not os.path.basename(f).startswith("~$")
     ]
 
-    if len(candidate_files) == 0:
+    if not candidate_files:
         return None
 
-    # Prefer CSV when available
-    csv_files = [
-        f for f in candidate_files
-        if f.lower().endswith(".csv")
-    ]
-
+    # Prefer CSV, then Excel.
+    csv_files = sorted(
+        [f for f in candidate_files if f.lower().endswith(".csv")]
+    )
     if csv_files:
         return csv_files[0]
 
-    return candidate_files[0]
+    return sorted(candidate_files)[0]
 
 
 selected_file = find_data_file()
 
-
 if selected_file is None:
-
-    st.error(
-        "No CSV or Excel dataset was found in the application folder."
-    )
-
+    st.error("No CSV or Excel dataset was found in the application folder.")
     st.info(
-        "Upload your mine dataset to the GitHub repository, "
-        "or specify its filename in DATA_FILE."
+        "Upload your mine dataset to the GitHub repository or set DATA_FILE "
+        "to the exact filename in app.py."
     )
-
     st.stop()
 
 
@@ -166,48 +139,35 @@ if selected_file is None:
 
 @st.cache_data
 def load_data(file_path):
-
     if file_path.lower().endswith(".csv"):
         return pd.read_csv(file_path)
-
     if file_path.lower().endswith((".xlsx", ".xls")):
         return pd.read_excel(file_path)
-
     raise ValueError("Unsupported data format.")
 
 
 try:
     df = load_data(selected_file)
-
 except Exception as error:
-
-    st.error(
-        f"Unable to load the dataset: {error}"
-    )
-
+    st.error(f"Unable to load the dataset: {error}")
     st.stop()
 
 
 # ================================================================
-# 5. AUTOMATIC COLUMN IDENTIFICATION
+# 5. COLUMN IDENTIFICATION
 # ================================================================
 
 def find_column(dataframe, possible_names):
-
     lower_lookup = {
         str(col).strip().lower(): col
         for col in dataframe.columns
     }
 
-    # Exact case-insensitive match
     for name in possible_names:
-
         key = name.strip().lower()
-
         if key in lower_lookup:
             return lower_lookup[key]
 
-    # Simplified match
     simplified_lookup = {
         str(col)
         .strip()
@@ -215,92 +175,51 @@ def find_column(dataframe, possible_names):
         .replace("_", "")
         .replace(" ", "")
         .replace("-", ""): col
-
         for col in dataframe.columns
     }
 
     for name in possible_names:
-
-        simplified_name = (
+        key = (
             name.strip()
             .lower()
             .replace("_", "")
             .replace(" ", "")
             .replace("-", "")
         )
-
-        if simplified_name in simplified_lookup:
-            return simplified_lookup[simplified_name]
+        if key in simplified_lookup:
+            return simplified_lookup[key]
 
     return None
 
 
 MINE_NAME = find_column(
     df,
-    [
-        "Mine_Name",
-        "Mine Name",
-        "NAME",
-        "MINE_NAME",
-        "Mine",
-        "SITE_NAME",
-        "Site Name",
-    ],
+    ["Mine_Name", "Mine Name", "NAME", "MINE_NAME", "Mine", "SITE_NAME", "Site Name"],
 )
 
 LATITUDE = find_column(
     df,
-    [
-        "Latitude",
-        "LATITUDE",
-        "LAT",
-        "Y",
-        "latitude",
-    ],
+    ["Latitude", "LATITUDE", "LAT", "latitude"],
 )
 
 LONGITUDE = find_column(
     df,
-    [
-        "Longitude",
-        "LONGITUDE",
-        "LON",
-        "LONG",
-        "X",
-        "longitude",
-    ],
+    ["Longitude", "LONGITUDE", "LON", "LONG", "longitude"],
 )
 
 STATE = find_column(
     df,
-    [
-        "State",
-        "STATE",
-        "State_Name",
-        "STATE_NAME",
-    ],
+    ["State", "STATE", "State_Name", "STATE_NAME"],
 )
 
 STATUS = find_column(
     df,
-    [
-        "Mine_Status",
-        "Mine Status",
-        "STATUS",
-        "Status",
-        "MINESTATUS",
-    ],
+    ["Mine_Status", "Mine Status", "STATUS", "Status", "MINESTATUS"],
 )
 
 COMMODITY = find_column(
     df,
-    [
-        "Commodity",
-        "COMMODITY",
-        "Commodity_Name",
-        "COMMODITIES",
-        "Commodities",
-    ],
+    ["Commodity", "COMMODITY", "Commodity_Name", "COMMODITIES", "Commodities"],
 )
 
 TOPSIS = find_column(
@@ -317,31 +236,19 @@ TOPSIS = find_column(
     ],
 )
 
-SUITABILITY = find_column(
-    df,
-    [
-        "Suitability",
-        "SUITABILITY",
-        "Suitability_Class",
-        "Suitability Class",
-        "CLASS",
-    ],
-)
-
 RANK = find_column(
     df,
-    [
-        "Rank",
-        "RANK",
-        "TOPSIS_Rank",
-        "TOPSIS Rank",
-    ],
+    ["Rank", "RANK", "TOPSIS_Rank", "TOPSIS Rank"],
 )
 
+
 # ================================================================
+# 6. STUDY CRITERIA COLUMNS
 # ================================================================
-# PROXIMITY COLUMNS
-# ================================================================
+# Exact column names supplied by the user.
+
+TEMPERATURE_COLUMN = "C1_Temperature"
+RAINFALL_COLUMN = "C2_Rainfall"
 
 PROXIMITY_COLUMNS = {
     "Faults": "C3_Faults",
@@ -358,19 +265,16 @@ PROXIMITY_COLUMNS = {
     "Built-up Areas": "C14_Built_Up",
 }
 
+# Only keep criterion fields that really exist in the loaded dataset.
 PROXIMITY_COLUMNS = {
     label: column
     for label, column in PROXIMITY_COLUMNS.items()
     if column in df.columns
 }
-# Keep only columns that actually exist in the dataset
-PROXIMITY_COLUMNS = {
-    label: column
-    for label, column in PROXIMITY_COLUMNS.items()
-    if column in df.columns
-}
+
+
 # ================================================================
-# 6. VERIFY ESSENTIAL COLUMNS
+# 7. VERIFY REQUIRED COLUMNS
 # ================================================================
 
 essential_columns = {
@@ -382,309 +286,190 @@ essential_columns = {
     "TOPSIS score": TOPSIS,
 }
 
-
 missing = [
     label
     for label, column in essential_columns.items()
     if column is None
 ]
 
-
 if missing:
-
-    st.error(
-        "The application could not identify these required fields:"
-    )
-
+    st.error("The application could not identify these required fields:")
     st.write(missing)
-
     st.write("Columns currently available in your dataset:")
-
-    st.code(
-        "\n".join(
-            [str(column) for column in df.columns]
-        )
-    )
-
+    st.code("\n".join(str(column) for column in df.columns))
     st.stop()
 
 
 # ================================================================
-# 7. CLEAN DATA
+# 8. CLEAN DATA
 # ================================================================
 
-df[LATITUDE] = pd.to_numeric(
-    df[LATITUDE],
-    errors="coerce",
-)
+for numeric_column in [LATITUDE, LONGITUDE, TOPSIS]:
+    df[numeric_column] = pd.to_numeric(
+        df[numeric_column],
+        errors="coerce",
+    )
 
-df[LONGITUDE] = pd.to_numeric(
-    df[LONGITUDE],
-    errors="coerce",
-)
+# Convert criteria to numeric where possible.
+for criterion_column in [TEMPERATURE_COLUMN, RAINFALL_COLUMN, *PROXIMITY_COLUMNS.values()]:
+    if criterion_column in df.columns:
+        df[criterion_column] = pd.to_numeric(
+            df[criterion_column],
+            errors="coerce",
+        )
 
-df[TOPSIS] = pd.to_numeric(
-    df[TOPSIS],
-    errors="coerce",
-)
+if RANK is not None:
+    df[RANK] = pd.to_numeric(df[RANK], errors="coerce")
 
 
 df = df.dropna(
-    subset=[
-        LATITUDE,
-        LONGITUDE,
-        TOPSIS,
-    ]
+    subset=[LATITUDE, LONGITUDE, TOPSIS]
 ).copy()
 
-
-# Remove impossible coordinates
+# Remove impossible coordinates.
 df = df[
     df[LATITUDE].between(-90, 90)
-    &
-    df[LONGITUDE].between(-180, 180)
+    & df[LONGITUDE].between(-180, 180)
 ].copy()
 
-
-# Generate unique internal identifier
-df["_APP_ROW_ID"] = np.arange(
-    len(df)
-)
+# Stable internal ID for map selection.
+df = df.reset_index(drop=True)
+df["_APP_ROW_ID"] = np.arange(len(df))
 
 
 # ================================================================
-# 8. TITLE
+# 9. HEADER
 # ================================================================
-
-# Kept on one line to prevent Markdown interpreting HTML as code.
 
 st.markdown(
-    "<div class='hero'><div class='hero-title'>Mine-Based Geothermal Screening Tool</div><div class='hero-subtitle'>Interactive screening of Australian mine sites for mine-based geothermal energy opportunities</div></div>",
+    "<div class='hero'>"
+    "<div class='hero-title'>Mine-Based Geothermal Screening Tool</div>"
+    "<div class='hero-subtitle'>Interactive screening of Australian mine sites "
+    "for mine-based geothermal energy opportunities</div>"
+    "</div>",
     unsafe_allow_html=True,
 )
 
 
 # ================================================================
-# 9. SIDEBAR
+# 10. SIDEBAR FILTERS
 # ================================================================
 
-st.sidebar.header(
-    "Mine Screening Filters"
-)
-
-
-# ------------------------------------------------
-# Search
-# ------------------------------------------------
+st.sidebar.header("Mine Screening Filters")
 
 mine_search = st.sidebar.text_input(
     "Search by mine name",
     placeholder="Enter a mine name",
 )
 
-
-# ------------------------------------------------
-# State
-# ------------------------------------------------
-
 state_options = sorted(
-    df[STATE]
-    .dropna()
-    .astype(str)
-    .unique()
+    df[STATE].dropna().astype(str).unique()
 )
-
-
 selected_states = st.sidebar.multiselect(
     "State",
     options=state_options,
     default=state_options,
 )
 
-
-# ------------------------------------------------
-# Mine status
-# ------------------------------------------------
-
 status_options = sorted(
-    df[STATUS]
-    .dropna()
-    .astype(str)
-    .unique()
+    df[STATUS].dropna().astype(str).unique()
 )
-
-
 selected_status = st.sidebar.multiselect(
     "Mine status",
     options=status_options,
     default=status_options,
 )
 
-
-# ------------------------------------------------
-# Commodity
-# ------------------------------------------------
-
 selected_commodities = []
-
-
 if COMMODITY is not None:
-
     commodity_options = sorted(
-        df[COMMODITY]
-        .dropna()
-        .astype(str)
-        .unique()
+        df[COMMODITY].dropna().astype(str).unique()
     )
-
     selected_commodities = st.sidebar.multiselect(
         "Commodity",
         options=commodity_options,
         placeholder="Choose options",
     )
 
-
-# ------------------------------------------------
-# TOPSIS score
-# ------------------------------------------------
-
-minimum_score = float(
-    df[TOPSIS].min()
-)
-
-maximum_score = float(
-    df[TOPSIS].max()
-)
-
+minimum_score = float(df[TOPSIS].min())
+maximum_score = float(df[TOPSIS].max())
 
 selected_score = st.sidebar.slider(
     "TOPSIS score range",
     min_value=minimum_score,
     max_value=maximum_score,
-    value=(
-        minimum_score,
-        maximum_score,
-    ),
+    value=(minimum_score, maximum_score),
     step=0.001,
     format="%.3f",
 )
 
-
 st.sidebar.markdown("---")
-
 st.sidebar.caption(
-    "Adjust the filters to explore mine locations "
-    "and their screening results."
+    "Adjust the filters to explore mine locations and their screening results."
 )
 
 
 # ================================================================
-# 10. FILTER DATA
+# 11. APPLY FILTERS
 # ================================================================
 
 filtered_df = df.copy()
 
-
 if mine_search.strip():
-
     filtered_df = filtered_df[
         filtered_df[MINE_NAME]
         .astype(str)
-        .str.contains(
-            mine_search.strip(),
-            case=False,
-            na=False,
-        )
+        .str.contains(mine_search.strip(), case=False, na=False)
     ]
-
 
 if selected_states:
-
     filtered_df = filtered_df[
-        filtered_df[STATE]
-        .astype(str)
-        .isin(selected_states)
+        filtered_df[STATE].astype(str).isin(selected_states)
     ]
-
 
 if selected_status:
-
     filtered_df = filtered_df[
-        filtered_df[STATUS]
-        .astype(str)
-        .isin(selected_status)
+        filtered_df[STATUS].astype(str).isin(selected_status)
     ]
 
-
-if (
-    COMMODITY is not None
-    and selected_commodities
-):
-
+if COMMODITY is not None and selected_commodities:
     filtered_df = filtered_df[
-        filtered_df[COMMODITY]
-        .astype(str)
-        .isin(selected_commodities)
+        filtered_df[COMMODITY].astype(str).isin(selected_commodities)
     ]
-
 
 filtered_df = filtered_df[
-    filtered_df[TOPSIS].between(
-        selected_score[0],
-        selected_score[1],
-    )
-]
+    filtered_df[TOPSIS].between(selected_score[0], selected_score[1])
+].copy()
 
 
 # ================================================================
-# 11. SCREENING SUMMARY
+# 12. SCREENING SUMMARY
 # ================================================================
 
-st.subheader(
-    "Screening Summary"
-)
+st.subheader("Screening Summary")
 
+metric1, metric2, metric3, metric4 = st.columns(4)
 
-metric1, metric2, metric3, metric4 = st.columns(
-    4
-)
-
-
-# Mine sites
 metric1.metric(
     "Mine Sites",
     f"{len(filtered_df):,}",
 )
 
-
-# States
 metric2.metric(
     "States Represented",
     f"{filtered_df[STATE].nunique():,}",
 )
 
-
-# Highest TOPSIS
-if len(filtered_df) > 0:
-
+if not filtered_df.empty:
     metric3.metric(
         "Highest TOPSIS Score",
         f"{filtered_df[TOPSIS].max():.4f}",
     )
-
 else:
+    metric3.metric("Highest TOPSIS Score", "-")
 
-    metric3.metric(
-        "Highest TOPSIS Score",
-        "-",
-    )
-
-
-# Inactive mines
 inactive_count = 0
-
-if len(filtered_df) > 0:
-
+if not filtered_df.empty:
     inactive_count = (
         filtered_df[STATUS]
         .astype(str)
@@ -693,59 +478,46 @@ if len(filtered_df) > 0:
         .sum()
     )
 
-
 metric4.metric(
     "Inactive Mines",
     f"{inactive_count:,}",
 )
 
-
 st.write("")
-
-
-# ================================================================
-# 12. MAP HEADING
-# ================================================================
-
-st.subheader(
-    "Explore Australian Mine Sites"
-)
-
-st.markdown(
-    "<div class='section-description'>Select a mine location on the map to explore its geothermal potential, infrastructure accessibility, end-user demand and screening characteristics.</div>",
-    unsafe_allow_html=True,
-)
 
 
 # ================================================================
 # 13. MAP + SELECTED MINE PANEL
 # ================================================================
 
-if filtered_df.empty:
+st.subheader("Explore Australian Mine Sites")
+st.markdown(
+    "<div class='section-description'>Select a mine location on the map to "
+    "explore its screening characteristics and proximity to key infrastructure "
+    "and end-user facilities.</div>",
+    unsafe_allow_html=True,
+)
 
-    st.warning(
-        "No mine sites match the selected filters."
-    )
+# This variable is available to later sections.
+selected_row_id = st.session_state.get("selected_mine_row", None)
+
+if filtered_df.empty:
+    st.warning("No mine sites match the selected filters.")
 
 else:
-
     map_column, detail_column = st.columns(
         [2.75, 1.25],
         gap="large",
     )
 
-
-    # ============================================================
+    # ------------------------------------------------------------
     # MAP
-    # ============================================================
-
+    # ------------------------------------------------------------
     with map_column:
-
         map_center = {
-            "lat": filtered_df[LATITUDE].mean(),
-            "lon": filtered_df[LONGITUDE].mean(),
+            "lat": float(filtered_df[LATITUDE].mean()),
+            "lon": float(filtered_df[LONGITUDE].mean()),
         }
-
 
         hover_data = {
             LATITUDE: False,
@@ -755,10 +527,8 @@ else:
             STATUS: True,
         }
 
-
         if COMMODITY is not None:
             hover_data[COMMODITY] = True
-
 
         fig = px.scatter_map(
             filtered_df,
@@ -766,20 +536,14 @@ else:
             lon=LONGITUDE,
             hover_name=MINE_NAME,
             hover_data=hover_data,
-            custom_data=[
-                "_APP_ROW_ID"
-            ],
+            custom_data=["_APP_ROW_ID"],
             center=map_center,
             zoom=3.15,
             height=680,
             map_style="open-street-map",
         )
 
-
-        # --------------------------------------------------------
-        # ONE SYMBOL / ONE COLOUR FOR ALL MINES
-        # --------------------------------------------------------
-
+        # Same symbol and colour for all mine locations.
         fig.update_traces(
             marker=dict(
                 size=7,
@@ -799,17 +563,10 @@ else:
             ),
         )
 
-
         fig.update_layout(
-            margin=dict(
-                l=0,
-                r=0,
-                t=0,
-                b=0,
-            ),
+            margin=dict(l=0, r=0, t=0, b=0),
             showlegend=False,
         )
-
 
         map_selection = st.plotly_chart(
             fig,
@@ -819,248 +576,140 @@ else:
             key="mine_map",
         )
 
-
-    # ============================================================
-    # IDENTIFY CLICKED MINE
-    # ============================================================
-
-    selected_row_id = None
-
-
+    # ------------------------------------------------------------
+    # GET CLICKED MINE ID
+    # ------------------------------------------------------------
     try:
-
         points = map_selection.selection.points
 
         if points:
-
             selected_point = points[0]
-
-            customdata = selected_point.get(
-                "customdata"
-            )
+            customdata = selected_point.get("customdata")
 
             if customdata is not None:
-
-                if isinstance(
-                    customdata,
-                    (list, tuple),
-                ):
-
-                    selected_row_id = int(
-                        customdata[0]
-                    )
-
+                if isinstance(customdata, (list, tuple)):
+                    new_selected_id = int(customdata[0])
                 else:
+                    new_selected_id = int(customdata)
 
-                    selected_row_id = int(
-                        customdata
-                    )
-
-
-                st.session_state[
-                    "selected_mine_row"
-                ] = selected_row_id
+                selected_row_id = new_selected_id
+                st.session_state["selected_mine_row"] = selected_row_id
 
     except Exception:
-        pass
+        # If no new point is clicked, keep the session-state selection.
+        selected_row_id = st.session_state.get("selected_mine_row", None)
 
+    # If filters removed the currently selected mine, clear the selection.
+    if selected_row_id is not None:
+        selected_exists = (
+            filtered_df["_APP_ROW_ID"] == selected_row_id
+        ).any()
 
-    # Keep selected mine after rerun
-    if selected_row_id is None:
+        if not selected_exists:
+            selected_row_id = None
+            st.session_state.pop("selected_mine_row", None)
 
-        selected_row_id = (
-            st.session_state.get(
-                "selected_mine_row"
-            )
-        )
-
-
-    # ============================================================
+    # ------------------------------------------------------------
     # SELECTED MINE DETAILS
-    # ============================================================
-
+    # ------------------------------------------------------------
     with detail_column:
-
-        st.subheader(
-            "Selected Mine"
-        )
+        st.subheader("Selected Mine")
 
         if selected_row_id is None:
-
-            with st.container(
-                border=True
-            ):
-
-                st.info(
-                    "Click a mine point on the map "
-                    "to view its details."
-                )
+            with st.container(border=True):
+                st.info("Click a mine point on the map to view its details.")
 
         else:
-
             selected_rows = filtered_df[
                 filtered_df["_APP_ROW_ID"] == selected_row_id
             ]
 
             if selected_rows.empty:
-
-                with st.container(
-                    border=True
-                ):
-
+                with st.container(border=True):
                     st.info(
-                        "The previously selected mine "
-                        "is outside the current filters."
+                        "The selected mine is outside the current filters."
                     )
-
             else:
-
                 mine = selected_rows.iloc[0]
 
-                # ------------------------------------------------
-                # MAIN MINE INFORMATION
-                # ------------------------------------------------
+                with st.container(border=True):
+                    st.markdown(f"### {mine[MINE_NAME]}")
 
-                with st.container(
-                    border=True
-                ):
-
-                    st.markdown(
-                        f"### {mine[MINE_NAME]}"
-                    )
-
-                    info_left, info_right = st.columns(
-                        2
-                    )
+                    info_left, info_right = st.columns(2)
 
                     with info_left:
+                        st.caption("State")
+                        st.markdown(f"**{mine[STATE]}**")
 
-                        st.caption(
-                            "State"
-                        )
-
-                        st.markdown(
-                            f"**{mine[STATE]}**"
-                        )
-
-                        st.caption(
-                            "Mine status"
-                        )
-
-                        st.markdown(
-                            f"**{mine[STATUS]}**"
-                        )
+                        st.caption("Mine status")
+                        st.markdown(f"**{mine[STATUS]}**")
 
                     with info_right:
-
                         if COMMODITY is not None:
-
-                            st.caption(
-                                "Commodity"
-                            )
-
                             commodity_value = (
                                 mine[COMMODITY]
-                                if pd.notna(
-                                    mine[COMMODITY]
-                                )
+                                if pd.notna(mine[COMMODITY])
                                 else "-"
                             )
+                            st.caption("Commodity")
+                            st.markdown(f"**{commodity_value}**")
 
-                            st.markdown(
-                                f"**{commodity_value}**"
-                            )
-
-                        if SUITABILITY is not None:
-
-                            st.caption(
-                                "Suitability class"
-                            )
-
-                            suitability_value = (
-                                mine[SUITABILITY]
-                                if pd.notna(
-                                    mine[SUITABILITY]
-                                )
-                                else "-"
-                            )
-
-                            st.markdown(
-                                f"**{suitability_value}**"
-                            )
-
-                # ------------------------------------------------
-                # TOPSIS + RANK
-                # ------------------------------------------------
-
-                score_col, rank_col = st.columns(
-                    2
-                )
+                score_col, rank_col = st.columns(2)
 
                 score_col.metric(
                     "TOPSIS Score",
                     f"{float(mine[TOPSIS]):.4f}",
                 )
 
-                if (
-                    RANK is not None
-                    and pd.notna(
-                        mine[RANK]
-                    )
-                ):
-
-                    rank_col.metric(
-                        "Rank",
-                        str(mine[RANK]),
-                    )
-
+                if RANK is not None and pd.notna(mine[RANK]):
+                    rank_value = mine[RANK]
+                    if float(rank_value).is_integer():
+                        rank_value = int(rank_value)
+                    rank_col.metric("Rank", str(rank_value))
                 else:
+                    rank_col.metric("Rank", "-")
 
-                    rank_col.metric(
-                        "Rank",
-                        "-",
-                    )
+                # Geothermal characteristics
+                geo_values_available = (
+                    TEMPERATURE_COLUMN in df.columns
+                    or RAINFALL_COLUMN in df.columns
+                )
 
-                # ------------------------------------------------
-                # COORDINATES
-                # ------------------------------------------------
+                if geo_values_available:
+                    with st.container(border=True):
+                        st.markdown("#### Geothermal Characteristics")
 
-                with st.container(
-                    border=True
-                ):
+                        geo1, geo2 = st.columns(2)
 
-                    st.markdown(
-                        "#### Location"
-                    )
+                        if TEMPERATURE_COLUMN in df.columns:
+                            temperature_value = mine.get(TEMPERATURE_COLUMN)
+                            geo1.caption("Temperature")
+                            if pd.notna(temperature_value):
+                                geo1.markdown(f"**{float(temperature_value):.2f} °C**")
+                            else:
+                                geo1.markdown("**-**")
 
-                    loc1, loc2 = st.columns(
-                        2
-                    )
+                        if RAINFALL_COLUMN in df.columns:
+                            rainfall_value = mine.get(RAINFALL_COLUMN)
+                            geo2.caption("Rainfall")
+                            if pd.notna(rainfall_value):
+                                geo2.markdown(f"**{float(rainfall_value):.2f}**")
+                            else:
+                                geo2.markdown("**-**")
 
-                    loc1.caption(
-                        "Latitude"
-                    )
+                # Coordinates
+                with st.container(border=True):
+                    st.markdown("#### Location")
+                    loc1, loc2 = st.columns(2)
 
-                    loc1.write(
-                        f"{float(mine[LATITUDE]):.5f}"
-                    )
+                    loc1.caption("Latitude")
+                    loc1.write(f"{float(mine[LATITUDE]):.5f}")
 
-                    loc2.caption(
-                        "Longitude"
-                    )
+                    loc2.caption("Longitude")
+                    loc2.write(f"{float(mine[LONGITUDE]):.5f}")
 
-                    loc2.write(
-                        f"{float(mine[LONGITUDE]):.5f}"
-                    )
-
-                # ------------------------------------------------
-                # ADDITIONAL ATTRIBUTES
-                # ------------------------------------------------
-
-                with st.expander(
-                    "View additional mine attributes"
-                ):
-
+                # Other attributes
+                with st.expander("View additional mine attributes"):
                     excluded_columns = {
                         "_APP_ROW_ID",
                         MINE_NAME,
@@ -1069,45 +718,28 @@ else:
                         STATE,
                         STATUS,
                         TOPSIS,
+                        TEMPERATURE_COLUMN,
+                        RAINFALL_COLUMN,
+                        *PROXIMITY_COLUMNS.values(),
                     }
 
                     if COMMODITY is not None:
-                        excluded_columns.add(
-                            COMMODITY
-                        )
-
-                    if SUITABILITY is not None:
-                        excluded_columns.add(
-                            SUITABILITY
-                        )
-
+                        excluded_columns.add(COMMODITY)
                     if RANK is not None:
-                        excluded_columns.add(
-                            RANK
-                        )
+                        excluded_columns.add(RANK)
 
                     attribute_rows = []
 
                     for column in df.columns:
-
                         if column in excluded_columns:
                             continue
 
-                        value = mine.get(
-                            column
-                        )
-
+                        value = mine.get(column)
                         if pd.isna(value):
                             continue
 
-                        if isinstance(
-                            value,
-                            float,
-                        ):
-
-                            value = (
-                                f"{value:,.4f}"
-                            )
+                        if isinstance(value, (float, np.floating)):
+                            value = f"{float(value):,.4f}"
 
                         attribute_rows.append(
                             {
@@ -1117,287 +749,227 @@ else:
                         )
 
                     if attribute_rows:
-
-                        attributes_df = pd.DataFrame(
-                            attribute_rows
-                        )
-
                         st.dataframe(
-                            attributes_df,
+                            pd.DataFrame(attribute_rows),
                             hide_index=True,
                             use_container_width=True,
                         )
-
                     else:
+                        st.caption("No additional attributes are available.")
 
-                        st.caption(
-                            "No additional attributes are available."
-                        )
 
-    # ============================================================
-    # PROXIMITY ANALYSIS
-    # ============================================================
-
-  # ================================================================
-# PROXIMITY ANALYSIS
 # ================================================================
+# 14. PROXIMITY ANALYSIS
+# ================================================================
+# IMPORTANT: this section uses proximity_mine only. It does not use
+# selected_mine, so the earlier NameError cannot occur here.
 
-selected_proximity_id = st.session_state.get("selected_mine_row")
-
-if selected_proximity_id is not None:
-
-    selected_rows_proximity = filtered_df[
-        filtered_df["_APP_ROW_ID"] == selected_proximity_id
+if selected_row_id is not None and not filtered_df.empty:
+    proximity_selected_rows = filtered_df[
+        filtered_df["_APP_ROW_ID"] == selected_row_id
     ]
 
-    if not selected_rows_proximity.empty:
-
-        selected_mine = selected_rows_proximity.iloc[0]
+    if not proximity_selected_rows.empty and PROXIMITY_COLUMNS:
+        proximity_mine = proximity_selected_rows.iloc[0]
 
         proximity_data = []
 
         for label, column in PROXIMITY_COLUMNS.items():
-
-            if column not in selected_mine.index:
-                continue
-
             value = pd.to_numeric(
-                pd.Series([selected_mine[column]]),
-                errors="coerce"
+                pd.Series([proximity_mine.get(column)]),
+                errors="coerce",
             ).iloc[0]
 
             if pd.notna(value):
-
                 proximity_data.append(
                     {
                         "Criterion": label,
-                        "Distance": float(value)
+                        "Distance": float(value),
                     }
                 )
 
-        # --------------------------------------------------------
-        # GRAPH 1 - SELECTED MINE PROXIMITY PROFILE
-        # --------------------------------------------------------
-
         if proximity_data:
-
             st.divider()
-
             st.subheader("Proximity Analysis")
-
             st.caption(
-                "Distance from the selected mine to key geological, "
-                "infrastructure and end-user features. "
-                "Lower values indicate closer proximity."
+                "Distance from the selected mine to key geological, infrastructure "
+                "and end-user features. Lower values indicate closer proximity."
             )
 
-            proximity_df = pd.DataFrame(proximity_data)
-
-            proximity_df = proximity_df.sort_values(
+            proximity_df = pd.DataFrame(proximity_data).sort_values(
                 "Distance",
-                ascending=True
+                ascending=True,
             )
 
-            fig_proximity = px.bar(
-                proximity_df,
-                x="Distance",
-                y="Criterion",
-                orientation="h",
-                text_auto=".1f",
-                labels={
-                    "Distance": "Distance (km)",
-                    "Criterion": ""
-                }
+            proximity_graph_col, comparison_graph_col = st.columns(
+                2,
+                gap="large",
             )
-
-            fig_proximity.update_layout(
-                height=520,
-                margin=dict(
-                    l=20,
-                    r=20,
-                    t=20,
-                    b=20
-                ),
-                showlegend=False
-            )
-
-            fig_proximity.update_yaxes(
-                categoryorder="total descending"
-            )
-
-            st.plotly_chart(
-                fig_proximity,
-                use_container_width=True
-            )
-
 
             # ----------------------------------------------------
-            # GRAPH 2 - SELECTED MINE VS FILTERED MINE MEDIAN
+            # GRAPH 1: SELECTED MINE PROXIMITY PROFILE
             # ----------------------------------------------------
+            with proximity_graph_col:
+                st.markdown("#### Selected Mine Proximity Profile")
 
+                fig_proximity = px.bar(
+                    proximity_df,
+                    x="Distance",
+                    y="Criterion",
+                    orientation="h",
+                    text_auto=".1f",
+                    labels={
+                        "Distance": "Distance (km)",
+                        "Criterion": "",
+                    },
+                )
+
+                fig_proximity.update_layout(
+                    height=530,
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    showlegend=False,
+                )
+
+                # Nearest feature appears at the top.
+                fig_proximity.update_yaxes(
+                    categoryorder="array",
+                    categoryarray=proximity_df["Criterion"].tolist()[::-1],
+                )
+
+                st.plotly_chart(
+                    fig_proximity,
+                    use_container_width=True,
+                )
+
+            # ----------------------------------------------------
+            # GRAPH 2: SELECTED MINE VS FILTERED-MINE MEDIAN
+            # ----------------------------------------------------
             comparison_data = []
 
             for label, column in PROXIMITY_COLUMNS.items():
-
-                if column not in filtered_df.columns:
-                    continue
-
                 selected_value = pd.to_numeric(
-                    pd.Series([selected_mine[column]]),
-                    errors="coerce"
+                    pd.Series([proximity_mine.get(column)]),
+                    errors="coerce",
                 ).iloc[0]
 
-                all_values = pd.to_numeric(
+                population_values = pd.to_numeric(
                     filtered_df[column],
-                    errors="coerce"
-                )
+                    errors="coerce",
+                ).dropna()
 
-                median_value = all_values.median()
+                if population_values.empty:
+                    continue
 
-                if (
-                    pd.notna(selected_value)
-                    and pd.notna(median_value)
-                ):
+                median_value = population_values.median()
 
+                if pd.notna(selected_value) and pd.notna(median_value):
                     comparison_data.append(
                         {
                             "Criterion": label,
                             "Selected Mine": float(selected_value),
-                            "Filtered Mine Median": float(median_value)
+                            "Filtered Mine Median": float(median_value),
                         }
                     )
 
+            with comparison_graph_col:
+                st.markdown("#### Selected Mine vs Current Selection")
 
-            if comparison_data:
+                if comparison_data:
+                    comparison_df = pd.DataFrame(comparison_data)
 
-                comparison_df = pd.DataFrame(
-                    comparison_data
-                )
-
-                comparison_long = comparison_df.melt(
-                    id_vars="Criterion",
-                    value_vars=[
-                        "Selected Mine",
-                        "Filtered Mine Median"
-                    ],
-                    var_name="Mine Group",
-                    value_name="Distance"
-                )
-
-                st.markdown(
-                    "#### Selected Mine Compared with Current Mine Selection"
-                )
-
-                st.caption(
-                    "Comparison between the selected mine and the median "
-                    "distance of all mines currently included by the filters."
-                )
-
-                fig_compare = px.bar(
-                    comparison_long,
-                    x="Distance",
-                    y="Criterion",
-                    color="Mine Group",
-                    barmode="group",
-                    orientation="h",
-                    labels={
-                        "Distance": "Distance (km)",
-                        "Criterion": "",
-                        "Mine Group": ""
-                    }
-                )
-
-                fig_compare.update_layout(
-                    height=560,
-                    margin=dict(
-                        l=20,
-                        r=20,
-                        t=20,
-                        b=20
+                    comparison_long = comparison_df.melt(
+                        id_vars="Criterion",
+                        value_vars=[
+                            "Selected Mine",
+                            "Filtered Mine Median",
+                        ],
+                        var_name="Mine Group",
+                        value_name="Distance",
                     )
-                )
 
-                st.plotly_chart(
-                    fig_compare,
-                    use_container_width=True
-                )
+                    fig_compare = px.bar(
+                        comparison_long,
+                        x="Distance",
+                        y="Criterion",
+                        color="Mine Group",
+                        barmode="group",
+                        orientation="h",
+                        labels={
+                            "Distance": "Distance (km)",
+                            "Criterion": "",
+                            "Mine Group": "",
+                        },
+                    )
+
+                    fig_compare.update_layout(
+                        height=530,
+                        margin=dict(l=20, r=20, t=20, b=20),
+                        legend_title_text="",
+                    )
+
+                    st.plotly_chart(
+                        fig_compare,
+                        use_container_width=True,
+                    )
+                else:
+                    st.info(
+                        "There are not enough proximity values to create the comparison graph."
+                    )
+
 
 # ================================================================
-# 14. HIGHEST-RANKED MINES TABLE
+# 15. HIGHEST-RANKED MINES TABLE
 # ================================================================
 
 st.write("")
 
-
-with st.expander(
-    "View highest-ranked mines in the current selection"
-):
-
-    table_columns = [
-        MINE_NAME,
-        STATE,
-        STATUS,
-    ]
-
-
-    if COMMODITY is not None:
-
-        table_columns.append(
-            COMMODITY
-        )
-
-
-    table_columns.append(
-        TOPSIS
-    )
-
-
-    if SUITABILITY is not None:
-
-        table_columns.append(
-            SUITABILITY
-        )
-
-
-    ranked_mines = (
-        filtered_df[
-            table_columns
+with st.expander("View highest-ranked mines in the current selection"):
+    if filtered_df.empty:
+        st.info("No mines are available for the current filters.")
+    else:
+        table_columns = [
+            MINE_NAME,
+            STATE,
+            STATUS,
         ]
-        .sort_values(
-            TOPSIS,
-            ascending=False,
+
+        if COMMODITY is not None:
+            table_columns.append(COMMODITY)
+
+        table_columns.append(TOPSIS)
+
+        if RANK is not None:
+            table_columns.append(RANK)
+
+        # Remove duplicates while preserving order.
+        table_columns = list(dict.fromkeys(table_columns))
+
+        ranked_mines = (
+            filtered_df[table_columns]
+            .sort_values(TOPSIS, ascending=False)
+            .head(25)
+            .copy()
         )
-        .head(25)
-        .copy()
-    )
 
+        ranked_mines[TOPSIS] = ranked_mines[TOPSIS].round(4)
 
-    ranked_mines[TOPSIS] = (
-        ranked_mines[TOPSIS]
-        .round(4)
-    )
-
-
-    st.dataframe(
-        ranked_mines,
-        hide_index=True,
-        use_container_width=True,
-    )
+        st.dataframe(
+            ranked_mines,
+            hide_index=True,
+            use_container_width=True,
+        )
 
 
 # ================================================================
-# 15. DOWNLOAD FILTERED DATA
+# 16. DOWNLOAD FILTERED DATA
 # ================================================================
 
-csv_data = filtered_df.drop(
-    columns=["_APP_ROW_ID"],
-    errors="ignore",
-).to_csv(
-    index=False
-).encode(
-    "utf-8"
+csv_data = (
+    filtered_df
+    .drop(columns=["_APP_ROW_ID"], errors="ignore")
+    .to_csv(index=False)
+    .encode("utf-8")
 )
-
 
 st.download_button(
     label="Download filtered mine data",
@@ -1408,49 +980,40 @@ st.download_button(
 
 
 # ================================================================
-# 16. TOPSIS INFORMATION
+# 17. TOPSIS INFORMATION
 # ================================================================
 
 st.divider()
 
-
-st.subheader(
-    "About the Mine Suitability Score"
-)
-
+st.subheader("About the Mine Suitability Score")
 
 st.markdown(
     """
 **TOPSIS (Technique for Order Preference by Similarity to Ideal Solution)**
-is a multi-criteria decision-making method used to compare and rank mine
-sites according to their relative suitability for mine-based geothermal
-energy development.
+is a multi-criteria decision-making method used to compare and rank mine sites
+according to their relative suitability for mine-based geothermal energy
+development.
 
 In this screening framework, multiple criteria representing **geothermal
-potential and mine-water characteristics, infrastructure accessibility,
-and end-user demand** are combined. The criterion weights are derived using
-the integrated **AHP–CRITIC weighting approach**.
+potential and mine-water characteristics, infrastructure accessibility, and
+end-user demand** are combined. Criterion weights are derived using the
+integrated **AHP–CRITIC weighting approach**.
 
-TOPSIS compares each mine with two theoretical reference conditions:
-
-- a **positive ideal solution**, representing the most favourable combination
-  of criteria; and
-- a **negative ideal solution**, representing the least favourable combination.
-
-A mine receives a higher TOPSIS score when it is relatively closer to the
-positive ideal solution and farther from the negative ideal solution.
+TOPSIS compares each mine with two theoretical reference conditions: a
+**positive ideal solution**, representing the most favourable combination of
+criterion values, and a **negative ideal solution**, representing the least
+favourable combination. A mine receives a higher TOPSIS score when it is
+relatively closer to the positive ideal solution and farther from the negative
+ideal solution.
 """
 )
 
 
 # ================================================================
-# 17. TOPSIS CALCULATION
+# 18. TOPSIS CALCULATION
 # ================================================================
 
-with st.expander(
-    "How is the TOPSIS score calculated?"
-):
-
+with st.expander("How is the TOPSIS score calculated?"):
     st.markdown(
         """
 First, the criterion values are normalised and multiplied by their respective
@@ -1461,27 +1024,18 @@ The Euclidean distance of each mine from the positive ideal solution is:
 """
     )
 
-
     st.latex(
         r"""
 S_i^{+}
 =
 \sqrt{
 \sum_{j=1}^{n}
-\left(
-v_{ij}-v_j^{+}
-\right)^2
+\left(v_{ij}-v_j^{+}\right)^2
 }
 """
     )
 
-
-    st.markdown(
-        """
-The distance from the negative ideal solution is:
-"""
-    )
-
+    st.markdown("The distance from the negative ideal solution is:")
 
     st.latex(
         r"""
@@ -1489,20 +1043,12 @@ S_i^{-}
 =
 \sqrt{
 \sum_{j=1}^{n}
-\left(
-v_{ij}-v_j^{-}
-\right)^2
+\left(v_{ij}-v_j^{-}\right)^2
 }
 """
     )
 
-
-    st.markdown(
-        """
-The final **closeness coefficient** or TOPSIS score is:
-"""
-    )
-
+    st.markdown("The final **closeness coefficient** or TOPSIS score is:")
 
     st.latex(
         r"""
@@ -1513,125 +1059,38 @@ C_i
 """
     )
 
-
     st.markdown(
-        """
+        r"""
 where:
 
-- **Sᵢ⁺** is the distance of mine *i* from the positive ideal solution;
-- **Sᵢ⁻** is the distance from the negative ideal solution; and
-- **Cᵢ** is the final TOPSIS closeness coefficient.
+- **$S_i^{+}$** is the distance of mine *i* from the positive ideal solution;
+- **$S_i^{-}$** is the distance from the negative ideal solution; and
+- **$C_i$** is the final TOPSIS closeness coefficient.
 
 The score generally ranges between **0 and 1**. A higher value indicates
 greater relative suitability within the evaluated mine dataset.
 """
     )
-# ================================================================
-# SELECTED MINE VS FILTERED-MINE MEDIAN
-# ================================================================
 
-comparison_data = []
-
-for label, column in PROXIMITY_COLUMNS.items():
-
-    selected_value = pd.to_numeric(
-        pd.Series([selected_mine[column]]),
-        errors="coerce"
-    ).iloc[0]
-
-    all_values = pd.to_numeric(
-        filtered_df[column],
-        errors="coerce"
-    )
-
-    median_value = all_values.median()
-
-    if (
-        pd.notna(selected_value)
-        and pd.notna(median_value)
-    ):
-
-        comparison_data.append(
-            {
-                "Criterion": label,
-                "Selected Mine": float(selected_value),
-                "Filtered Mine Median": float(median_value)
-            }
-        )
-
-
-if comparison_data:
-
-    comparison_df = pd.DataFrame(
-        comparison_data
-    )
-
-    comparison_long = comparison_df.melt(
-        id_vars="Criterion",
-        value_vars=[
-            "Selected Mine",
-            "Filtered Mine Median"
-        ],
-        var_name="Mine Group",
-        value_name="Distance"
-    )
-
-    st.subheader(
-        "Selected Mine Compared with Current Mine Selection"
-    )
-
-    st.caption(
-        "Comparison between the selected mine and the median "
-        "distance of all mines currently included by the filters."
-    )
-
-    fig_compare = px.bar(
-        comparison_long,
-        x="Distance",
-        y="Criterion",
-        color="Mine Group",
-        barmode="group",
-        orientation="h",
-        labels={
-            "Distance": "Distance (km)",
-            "Criterion": "",
-            "Mine Group": ""
-        }
-    )
-
-    fig_compare.update_layout(
-        height=560,
-        margin=dict(
-            l=20,
-            r=20,
-            t=20,
-            b=20
-        )
-    )
-
-    st.plotly_chart(
-        fig_compare,
-        use_container_width=True
-    )
 
 # ================================================================
-# 18. SCREENING DISCLAIMER
+# 19. DISCLAIMER
 # ================================================================
 
 st.info(
     """
 The results presented in this application are intended for preliminary
-screening and prioritisation of potential mine-based geothermal sites.
-The TOPSIS score represents relative suitability within the evaluated
-dataset and should not be considered a substitute for detailed
-site-specific geological, hydrogeological, geotechnical, environmental,
-technical or economic feasibility assessment.
+screening and prioritisation of potential mine-based geothermal sites. The
+TOPSIS score represents relative suitability within the evaluated dataset and
+should not be considered a substitute for detailed site-specific geological,
+hydrogeological, geotechnical, environmental, technical or economic feasibility
+assessment.
 """
 )
 
 
 # ================================================================
-# 19. FOOTER
+# 20. FOOTER
 # ================================================================
 
 st.caption(
