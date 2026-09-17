@@ -339,97 +339,30 @@ RANK = find_column(
 )
 
 # ================================================================
+# ================================================================
 # PROXIMITY COLUMNS
 # ================================================================
 
 PROXIMITY_COLUMNS = {
-    "Road": find_column(
-        df,
-        ["Road_Distance", "Road Distance", "Dist_Road", "Road"]
-    ),
-
-    "Rail": find_column(
-        df,
-        ["Rail_Distance", "Rail Distance", "Dist_Rail", "Rail"]
-    ),
-
-    "Powerline": find_column(
-        df,
-        [
-            "Powerline_Distance",
-            "Powerline Distance",
-            "Powerline",
-            "Dist_Powerline"
-        ]
-    ),
-
-    "Port": find_column(
-        df,
-        ["Port_Distance", "Port Distance", "Dist_Port", "Port"]
-    ),
-
-    "Data Centre": find_column(
-        df,
-        [
-            "DataCentre_Distance",
-            "Data Centre Distance",
-            "Data_Centre_Distance",
-            "Dist_DataCentre"
-        ]
-    ),
-
-    "Built-up Area": find_column(
-        df,
-        [
-            "BuiltUp_Distance",
-            "Built-up Distance",
-            "Builtup_Distance",
-            "Dist_BuiltUp"
-        ]
-    ),
-
-    "Manufacturing": find_column(
-        df,
-        [
-            "Manufacturing_Distance",
-            "Manufacturing Distance",
-            "Dist_Manufacturing"
-        ]
-    ),
-
-    "Health": find_column(
-        df,
-        [
-            "Health_Distance",
-            "Health Distance",
-            "Dist_Health"
-        ]
-    ),
-
-    "Education": find_column(
-        df,
-        [
-            "Education_Distance",
-            "Education Distance",
-            "Dist_Education"
-        ]
-    ),
-
-    "Agriculture": find_column(
-        df,
-        [
-            "Agriculture_Distance",
-            "Agriculture Distance",
-            "Dist_Agriculture"
-        ]
-    ),
+    "Faults": "C3_Faults",
+    "Direct Use": "C4_Direct_Use",
+    "Roads": "C5_Roads",
+    "Railways": "C6_Railways",
+    "Powerlines": "C7_Powerlines",
+    "Ports": "C8_Ports",
+    "Health": "C9_Health",
+    "Manufacturing": "C10_Manufacturing",
+    "Agriculture": "C11_Agriculture",
+    "Education": "C12_Education",
+    "Data Centres": "C13_Data_Centres",
+    "Built-up Areas": "C14_Built_Up",
 }
 
-# Remove criteria that were not found in the dataset
+# Keep only columns that actually exist in the dataset
 PROXIMITY_COLUMNS = {
     label: column
     for label, column in PROXIMITY_COLUMNS.items()
-    if column is not None
+    if column in df.columns
 }
 # ================================================================
 # 6. VERIFY ESSENTIAL COLUMNS
@@ -1485,7 +1418,93 @@ The score generally ranges between **0 and 1**. A higher value indicates
 greater relative suitability within the evaluated mine dataset.
 """
     )
+# ================================================================
+# SELECTED MINE VS FILTERED-MINE MEDIAN
+# ================================================================
 
+comparison_data = []
+
+for label, column in PROXIMITY_COLUMNS.items():
+
+    selected_value = pd.to_numeric(
+        pd.Series([selected_mine[column]]),
+        errors="coerce"
+    ).iloc[0]
+
+    all_values = pd.to_numeric(
+        filtered_df[column],
+        errors="coerce"
+    )
+
+    median_value = all_values.median()
+
+    if (
+        pd.notna(selected_value)
+        and pd.notna(median_value)
+    ):
+
+        comparison_data.append(
+            {
+                "Criterion": label,
+                "Selected Mine": float(selected_value),
+                "Filtered Mine Median": float(median_value)
+            }
+        )
+
+
+if comparison_data:
+
+    comparison_df = pd.DataFrame(
+        comparison_data
+    )
+
+    comparison_long = comparison_df.melt(
+        id_vars="Criterion",
+        value_vars=[
+            "Selected Mine",
+            "Filtered Mine Median"
+        ],
+        var_name="Mine Group",
+        value_name="Distance"
+    )
+
+    st.subheader(
+        "Selected Mine Compared with Current Mine Selection"
+    )
+
+    st.caption(
+        "Comparison between the selected mine and the median "
+        "distance of all mines currently included by the filters."
+    )
+
+    fig_compare = px.bar(
+        comparison_long,
+        x="Distance",
+        y="Criterion",
+        color="Mine Group",
+        barmode="group",
+        orientation="h",
+        labels={
+            "Distance": "Distance (km)",
+            "Criterion": "",
+            "Mine Group": ""
+        }
+    )
+
+    fig_compare.update_layout(
+        height=560,
+        margin=dict(
+            l=20,
+            r=20,
+            t=20,
+            b=20
+        )
+    )
+
+    st.plotly_chart(
+        fig_compare,
+        use_container_width=True
+    )
 
 # ================================================================
 # 18. SCREENING DISCLAIMER
