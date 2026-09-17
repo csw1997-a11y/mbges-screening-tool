@@ -338,7 +338,99 @@ RANK = find_column(
     ],
 )
 
+# ================================================================
+# PROXIMITY COLUMNS
+# ================================================================
 
+PROXIMITY_COLUMNS = {
+    "Road": find_column(
+        df,
+        ["Road_Distance", "Road Distance", "Dist_Road", "Road"]
+    ),
+
+    "Rail": find_column(
+        df,
+        ["Rail_Distance", "Rail Distance", "Dist_Rail", "Rail"]
+    ),
+
+    "Powerline": find_column(
+        df,
+        [
+            "Powerline_Distance",
+            "Powerline Distance",
+            "Powerline",
+            "Dist_Powerline"
+        ]
+    ),
+
+    "Port": find_column(
+        df,
+        ["Port_Distance", "Port Distance", "Dist_Port", "Port"]
+    ),
+
+    "Data Centre": find_column(
+        df,
+        [
+            "DataCentre_Distance",
+            "Data Centre Distance",
+            "Data_Centre_Distance",
+            "Dist_DataCentre"
+        ]
+    ),
+
+    "Built-up Area": find_column(
+        df,
+        [
+            "BuiltUp_Distance",
+            "Built-up Distance",
+            "Builtup_Distance",
+            "Dist_BuiltUp"
+        ]
+    ),
+
+    "Manufacturing": find_column(
+        df,
+        [
+            "Manufacturing_Distance",
+            "Manufacturing Distance",
+            "Dist_Manufacturing"
+        ]
+    ),
+
+    "Health": find_column(
+        df,
+        [
+            "Health_Distance",
+            "Health Distance",
+            "Dist_Health"
+        ]
+    ),
+
+    "Education": find_column(
+        df,
+        [
+            "Education_Distance",
+            "Education Distance",
+            "Dist_Education"
+        ]
+    ),
+
+    "Agriculture": find_column(
+        df,
+        [
+            "Agriculture_Distance",
+            "Agriculture Distance",
+            "Dist_Agriculture"
+        ]
+    ),
+}
+
+# Remove criteria that were not found in the dataset
+PROXIMITY_COLUMNS = {
+    label: column
+    for label, column in PROXIMITY_COLUMNS.items()
+    if column is not None
+}
 # ================================================================
 # 6. VERIFY ESSENTIAL COLUMNS
 # ================================================================
@@ -970,7 +1062,93 @@ else:
                                 f"**{suitability_value}**"
                             )
 
+# ================================================================
+# PROXIMITY ANALYSIS
+# ================================================================
 
+if selected_row_id is not None:
+
+    selected_rows = filtered_df[
+        filtered_df["_APP_ROW_ID"] == selected_row_id
+    ]
+
+    if not selected_rows.empty:
+
+        mine = selected_rows.iloc[0]
+
+        proximity_data = []
+
+        for label, column in PROXIMITY_COLUMNS.items():
+
+            value = pd.to_numeric(
+                pd.Series([mine[column]]),
+                errors="coerce"
+            ).iloc[0]
+
+            if pd.notna(value):
+
+                proximity_data.append(
+                    {
+                        "Criterion": label,
+                        "Distance_km": float(value)
+                    }
+                )
+
+
+        if proximity_data:
+
+            st.divider()
+
+            st.subheader("Proximity Analysis")
+
+            st.caption(
+                "Distance of the selected mine from key infrastructure "
+                "and potential end-user facilities. Lower values indicate "
+                "closer proximity."
+            )
+
+            proximity_df = pd.DataFrame(proximity_data)
+
+            proximity_df = proximity_df.sort_values(
+                "Distance_km",
+                ascending=True
+            )
+
+
+            fig_proximity = px.bar(
+                proximity_df,
+                x="Distance_km",
+                y="Criterion",
+                orientation="h",
+                text_auto=".1f",
+                labels={
+                    "Distance_km": "Distance (km)",
+                    "Criterion": ""
+                }
+            )
+
+
+            fig_proximity.update_layout(
+                height=450,
+                margin=dict(
+                    l=20,
+                    r=20,
+                    t=20,
+                    b=20
+                ),
+                showlegend=False
+            )
+
+
+            fig_proximity.update_yaxes(
+                categoryorder="total ascending"
+            )
+
+
+            st.plotly_chart(
+                fig_proximity,
+                use_container_width=True
+            )
                 # ------------------------------------------------
                 # TOPSIS + RANK
                 # ------------------------------------------------
