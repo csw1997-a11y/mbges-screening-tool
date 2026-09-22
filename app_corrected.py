@@ -19,7 +19,7 @@ st.set_page_config(
     page_title="Mine-Based Geothermal Screening Tool",
     page_icon="🌏",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 
@@ -31,9 +31,22 @@ st.markdown(
     """
 <style>
 .block-container {
-    max-width: 1650px;
+    max-width: 100%;
     padding-top: 1.2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     padding-bottom: 2.5rem;
+}
+
+/* Allow dashboard columns to wrap instead of overflowing. */
+[data-testid="stHorizontalBlock"] {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+[data-testid="column"] {
+    min-width: 210px;
+    flex: 1 1 210px;
 }
 
 [data-testid="stSidebar"] {
@@ -51,6 +64,14 @@ st.markdown(
 
 [data-testid="stMetricLabel"] {
     font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -67,9 +88,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 
 .hero-title {
     color: white;
-    font-size: 2.15rem;
+    font-size: clamp(1.55rem, 4vw, 2.15rem);
     font-weight: 700;
     margin: 0;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .hero-subtitle {
@@ -88,6 +111,73 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .small-note {
     color: #6b7280;
     font-size: 0.86rem;
+}
+
+/* Keep charts and tables inside the available screen width. */
+[data-testid="stPlotlyChart"],
+[data-testid="stDataFrame"] {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+@media screen and (max-width: 768px) {
+    .block-container {
+        padding-top: 0.8rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        padding-bottom: 1.25rem;
+    }
+
+    [data-testid="stHorizontalBlock"] {
+        gap: 0.6rem;
+    }
+
+    [data-testid="column"] {
+        min-width: 100%;
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    [data-testid="stMetric"] {
+        padding: 0.75rem 0.9rem;
+    }
+
+    [data-testid="stMetricValue"] {
+        font-size: 1.4rem;
+    }
+
+    .hero {
+        padding: 18px 16px;
+        border-radius: 13px;
+        margin-bottom: 16px;
+    }
+
+    .hero-subtitle {
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
+    .section-description {
+        margin-top: -4px;
+        line-height: 1.45;
+    }
+
+    .stButton > button,
+    .stDownloadButton > button {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .block-container {
+        padding-left: 0.4rem;
+        padding-right: 0.4rem;
+    }
+
+    .hero {
+        padding: 16px 13px;
+    }
 }
 </style>
 """,
@@ -876,6 +966,11 @@ else:
         map_selection = st.plotly_chart(
             fig,
             use_container_width=True,
+            config={
+                "responsive": True,
+                "displayModeBar": True,
+                "scrollZoom": True,
+            },
             on_select="rerun",
             selection_mode="points",
             key="mine_map",
@@ -1278,7 +1373,11 @@ else:
 
                 st.plotly_chart(
                     fig_proximity,
-                    use_container_width=True
+                    use_container_width=True,
+                    config={
+                        "responsive": True,
+                        "displayModeBar": False,
+                    },
                 )
 
 # ================================================================
@@ -1363,6 +1462,7 @@ st.download_button(
     data=csv_data,
     file_name="filtered_mine_screening_results.csv",
     mime="text/csv",
+    use_container_width=True,
 )
 
 
