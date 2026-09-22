@@ -433,93 +433,23 @@ RANK = find_column(
 # ================================================================
 
 PROXIMITY_COLUMNS = {
-    "Road": find_column(
-        df,
-        ["Road_Distance", "Road Distance", "Dist_Road", "Road"]
-    ),
-
-    "Rail": find_column(
-        df,
-        ["Rail_Distance", "Rail Distance", "Dist_Rail", "Rail"]
-    ),
-
-    "Powerline": find_column(
-        df,
-        [
-            "Powerline_Distance",
-            "Powerline Distance",
-            "Powerline",
-            "Dist_Powerline"
-        ]
-    ),
-
-    "Port": find_column(
-        df,
-        ["Port_Distance", "Port Distance", "Dist_Port", "Port"]
-    ),
-
-    "Data Centre": find_column(
-        df,
-        [
-            "DataCentre_Distance",
-            "Data Centre Distance",
-            "Data_Centre_Distance",
-            "Dist_DataCentre"
-        ]
-    ),
-
-    "Built-up Area": find_column(
-        df,
-        [
-            "BuiltUp_Distance",
-            "Built-up Distance",
-            "Builtup_Distance",
-            "Dist_BuiltUp"
-        ]
-    ),
-
-    "Manufacturing": find_column(
-        df,
-        [
-            "Manufacturing_Distance",
-            "Manufacturing Distance",
-            "Dist_Manufacturing"
-        ]
-    ),
-
-    "Health": find_column(
-        df,
-        [
-            "Health_Distance",
-            "Health Distance",
-            "Dist_Health"
-        ]
-    ),
-
-    "Education": find_column(
-        df,
-        [
-            "Education_Distance",
-            "Education Distance",
-            "Dist_Education"
-        ]
-    ),
-
-    "Agriculture": find_column(
-        df,
-        [
-            "Agriculture_Distance",
-            "Agriculture Distance",
-            "Dist_Agriculture"
-        ]
-    ),
+    "Major Roads": "C5_Roads",
+    "Railway Lines": "C6_Railways",
+    "Electricity Transmission Lines": "C7_Powerlines",
+    "Ports": "C8_Ports",
+    "Health Facilities": "C9_Health",
+    "Manufacturing Facilities": "C10_Manufacturing",
+    "Agriculture and Farming": "C11_Agriculture",
+    "Educational Centres": "C12_Education",
+    "Data Centres": "C13_Data_Centres",
+    "Built-up Areas": "C14_Built_Up",
 }
 
 # Remove criteria that were not found in the dataset
 PROXIMITY_COLUMNS = {
     label: column
     for label, column in PROXIMITY_COLUMNS.items()
-    if column is not None
+    if column in df.columns
 }
 # ================================================================
 # 6. VERIFY ESSENTIAL COLUMNS
