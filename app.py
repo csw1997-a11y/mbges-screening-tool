@@ -696,6 +696,24 @@ if not lease_boundary_available:
 
 st.sidebar.markdown("---")
 
+st.sidebar.subheader(
+    "Proximity Analysis"
+)
+
+
+selected_proximity_criteria = st.sidebar.multiselect(
+    "Choose criteria to display",
+    options=list(PROXIMITY_COLUMNS.keys()),
+    default=list(PROXIMITY_COLUMNS.keys()),
+    help=(
+        "Select the infrastructure and end-user distances that should "
+        "appear in the proximity chart for the selected mine."
+    ),
+)
+
+
+st.sidebar.markdown("---")
+
 st.sidebar.caption(
     "Adjust the filters to explore mine locations "
     "and their screening results."
@@ -1316,6 +1334,9 @@ else:
 
             for label, column in PROXIMITY_COLUMNS.items():
 
+                if label not in selected_proximity_criteria:
+                    continue
+
                 value = pd.to_numeric(
                     pd.Series([mine[column]]),
                     errors="coerce"
@@ -1385,6 +1406,13 @@ else:
                         "responsive": True,
                         "displayModeBar": False,
                     },
+                )
+
+            elif not selected_proximity_criteria:
+
+                st.info(
+                    "Select one or more criteria under Proximity Analysis "
+                    "in the sidebar to display the chart."
                 )
 
 # ================================================================
