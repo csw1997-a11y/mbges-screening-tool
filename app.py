@@ -874,17 +874,17 @@ if show_lease_boundaries:
         LEASE_BOUNDARY_FILE
     )
 
-    map_layers.append(
-        {
-            "source": mine_lease_geojson,
-            "type": "line",
-            "color": "#ff7800",
-            "line": {
-                "width": 1.5
-            },
-            "opacity": 0.85
-        }
-    )
+        map_layers.append(
+            {
+                "source": mine_lease_geojson,
+                "type": "line",
+                "color": "#ff7800",
+                "line": {
+                    "width": 1.5
+                },
+                "opacity": 0.85
+            }
+        )
 
         fig = px.scatter_map(
             filtered_df,
