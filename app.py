@@ -597,10 +597,17 @@ state_options = sorted(
 )
 
 
-selected_states = st.sidebar.multiselect(
+selected_state = st.sidebar.selectbox(
     "State",
-    options=state_options,
-    default=state_options,
+    options=["All states"] + state_options,
+    index=0,
+)
+
+
+selected_states = (
+    state_options
+    if selected_state == "All states"
+    else [selected_state]
 )
 
 
@@ -616,10 +623,17 @@ status_options = sorted(
 )
 
 
-selected_status = st.sidebar.multiselect(
+selected_mine_status = st.sidebar.selectbox(
     "Mine status",
-    options=status_options,
-    default=status_options,
+    options=["All mine statuses"] + status_options,
+    index=0,
+)
+
+
+selected_status = (
+    status_options
+    if selected_mine_status == "All mine statuses"
+    else [selected_mine_status]
 )
 
 
