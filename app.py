@@ -1327,7 +1327,7 @@ else:
             selected_proximity_criteria = []
 
             with st.expander(
-                "Display options",
+                "Proximity features",
                 expanded=False,
             ):
 
