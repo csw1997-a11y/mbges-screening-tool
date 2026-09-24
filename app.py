@@ -696,24 +696,6 @@ if not lease_boundary_available:
 
 st.sidebar.markdown("---")
 
-st.sidebar.subheader(
-    "Proximity Analysis"
-)
-
-
-selected_proximity_criteria = st.sidebar.multiselect(
-    "Choose criteria to display",
-    options=list(PROXIMITY_COLUMNS.keys()),
-    default=list(PROXIMITY_COLUMNS.keys()),
-    help=(
-        "Select the infrastructure and end-user distances that should "
-        "appear in the proximity chart for the selected mine."
-    ),
-)
-
-
-st.sidebar.markdown("---")
-
 st.sidebar.caption(
     "Adjust the filters to explore mine locations "
     "and their screening results."
@@ -1330,6 +1312,29 @@ else:
 
             mine = selected_rows.iloc[0]
 
+            st.divider()
+
+            st.subheader(
+                "Proximity Analysis"
+            )
+
+            st.caption(
+                "Distance of the selected mine from key infrastructure "
+                "and potential end-user facilities. Lower values indicate "
+                "closer proximity."
+            )
+
+            selected_proximity_criteria = st.multiselect(
+                "Choose proximity layers to display",
+                options=list(PROXIMITY_COLUMNS.keys()),
+                default=list(PROXIMITY_COLUMNS.keys()),
+                help=(
+                    "Open the dropdown and select or remove the proximity "
+                    "criteria shown in the graph."
+                ),
+                key="proximity_criteria_graph_selector",
+            )
+
             proximity_data = []
 
             for label, column in PROXIMITY_COLUMNS.items():
@@ -1352,18 +1357,6 @@ else:
                     )
 
             if proximity_data:
-
-                st.divider()
-
-                st.subheader(
-                    "Proximity Analysis"
-                )
-
-                st.caption(
-                    "Distance of the selected mine from key infrastructure "
-                    "and potential end-user facilities. Lower values indicate "
-                    "closer proximity."
-                )
 
                 proximity_df = pd.DataFrame(
                     proximity_data
@@ -1411,8 +1404,15 @@ else:
             elif not selected_proximity_criteria:
 
                 st.info(
-                    "Select one or more criteria under Proximity Analysis "
-                    "in the sidebar to display the chart."
+                    "Choose one or more proximity layers from the dropdown "
+                    "above to display the chart."
+                )
+
+            else:
+
+                st.info(
+                    "No proximity values are available for the selected "
+                    "criteria at this mine."
                 )
 
 # ================================================================
