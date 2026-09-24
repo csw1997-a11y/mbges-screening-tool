@@ -1324,16 +1324,38 @@ else:
                 "closer proximity."
             )
 
-            selected_proximity_criteria = st.multiselect(
-                "Choose proximity layers to display",
-                options=list(PROXIMITY_COLUMNS.keys()),
-                default=list(PROXIMITY_COLUMNS.keys()),
-                help=(
-                    "Open the dropdown and select or remove the proximity "
-                    "criteria shown in the graph."
-                ),
-                key="proximity_criteria_graph_selector",
-            )
+            selected_proximity_criteria = []
+
+            with st.expander(
+                "Display options",
+                expanded=False,
+            ):
+
+                st.caption(
+                    "Select the proximity criteria to include in the chart."
+                )
+
+                option_columns = st.columns(2)
+
+                for option_index, option_label in enumerate(
+                    PROXIMITY_COLUMNS.keys()
+                ):
+
+                    option_enabled = option_columns[
+                        option_index % 2
+                    ].checkbox(
+                        option_label,
+                        value=True,
+                        key=f"proximity_option_{option_index}",
+                    )
+
+                    if option_enabled:
+                        selected_proximity_criteria.append(option_label)
+
+                st.caption(
+                    f"{len(selected_proximity_criteria)} of "
+                    f"{len(PROXIMITY_COLUMNS)} criteria displayed"
+                )
 
             proximity_data = []
 
