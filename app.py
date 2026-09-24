@@ -5,6 +5,7 @@
 
 import os
 import glob
+import json
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -277,7 +278,22 @@ except Exception as error:
 
     st.stop()
 
+# ================================================================
+# MINE LEASE BOUNDARY LAYER
+# ================================================================
 
+LEASE_BOUNDARY_FILE = "data/mine_lease_boundaries.geojson"
+
+
+@st.cache_data
+def load_geojson(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+lease_boundary_available = os.path.exists(
+    LEASE_BOUNDARY_FILE
+)
 # ================================================================
 # 5. AUTOMATIC COLUMN IDENTIFICATION
 # ================================================================
@@ -717,7 +733,18 @@ filtered_df = filtered_df[
     )
 ]
 
+st.sidebar.subheader("GIS Layers")
 
+show_lease_boundaries = st.sidebar.checkbox(
+    "Mine Lease Boundaries",
+    value=False,
+    disabled=not lease_boundary_available
+)
+
+if not lease_boundary_available:
+    st.sidebar.caption(
+        "Mine lease boundary file was not found."
+    )
 # ================================================================
 # 11. SCREENING SUMMARY
 # ================================================================
@@ -840,7 +867,24 @@ else:
 
         if COMMODITY is not None:
             hover_data[COMMODITY] = True
+map_layers = []
 
+if show_lease_boundaries:
+    mine_lease_geojson = load_geojson(
+        LEASE_BOUNDARY_FILE
+    )
+
+    map_layers.append(
+        {
+            "source": mine_lease_geojson,
+            "type": "line",
+            "color": "#ff7800",
+            "line": {
+                "width": 1.5
+            },
+            "opacity": 0.85
+        }
+    )
 
         fig = px.scatter_map(
             filtered_df,
@@ -883,14 +927,15 @@ else:
 
 
         fig.update_layout(
-            margin=dict(
-                l=0,
-                r=0,
-                t=0,
-                b=0,
-            ),
-            showlegend=False,
-        )
+    map_layers=map_layers,
+    margin=dict(
+        l=0,
+        r=0,
+        t=0,
+        b=0,
+    ),
+    showlegend=False,
+))
 
 
         map_selection = st.plotly_chart(
